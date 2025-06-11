@@ -11,17 +11,22 @@ export default function AuthPage() {
 
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const validatePhone = (phone: string) => {
-    const iranPhoneRegex = /^09\d{9}$/;
+    const iranPhoneRegex = /^(\+98|0)?9\d{9}$/;
     return iranPhoneRegex.test(phone);
   };
 
-  const handleLogin = async () => {
+  const handleLogin = async (event?: React.FormEvent<HTMLFormElement>) => {
+    if (event) event.preventDefault();
+
     if (!validatePhone(phone)) {
       setError("Phone number is not valid");
       return;
     }
+
+    setLoading(true);
 
     try {
       const res = await fetch("https://randomuser.me/api/?results=1&nat=us");
@@ -32,12 +37,14 @@ export default function AuthPage() {
       router.push("/dashboard");
     } catch (err) {
       console.error("Error fetching user:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className={styles.container}>
-      <div className={styles.form}>
+      <form className={styles.form} onSubmit={handleLogin}>
         <h1>Login</h1>
         <Input
           label="Phone Number"
@@ -46,8 +53,12 @@ export default function AuthPage() {
           onChange={(e) => setPhone(e.target.value)}
           error={error}
         />
-        <Button label="Login" onClick={handleLogin} />
-      </div>
+        <Button
+          label={loading ? "Loading..." : "Login"}
+          type="submit"
+          disabled={loading}
+        />
+      </form>
     </div>
   );
 }
